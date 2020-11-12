@@ -1,0 +1,79 @@
+//woocommerce-how-to-edit-the-added-to-cart-message
+
+add_filter ( 'wc_add_to_cart_message', 'wc_add_to_cart_message_filter', 10, 2 );
+function wc_add_to_cart_message_filter($message, $product_id = null) {
+    $titles[] = get_the_title( $product_id );
+
+    $titles = array_filter( $titles );
+    $added_text = sprintf( _n( '%s has been added to your cart.', '%s have been added to your cart.', sizeof( $titles ), 'woocommerce' ), wc_format_list_of_items( $titles ) );
+
+    $message = sprintf( '%s <a href="%s" class="button">%s</a>&nbsp;<a href="%s" class="button">%s</a>',
+                    esc_html( $added_text ),
+                    esc_url( wc_get_page_permalink( 'checkout' ) ),
+                    esc_html__( 'Checkout', 'woocommerce' ),
+                    esc_url( wc_get_page_permalink( 'cart' ) ),
+                    esc_html__( 'View Cart', 'woocommerce' ));
+
+    return $message;
+}
+
+
+//Have you tried a filter like the following
+
+function your_add_to_cart_message() {
+if ( get_option( 'woocommerce_cart_redirect_after_add' ) == 'yes' ) :
+    $message = sprintf( '%s<a href="%s" class="your-style">%s</a>', __( 'Successfully added to cart.', 'woocommerce' ), esc_url( get_permalink( woocommerce_get_page_id( 'shop' ) ) ), __( 'Continue Shopping', 'woocommerce' ) );
+else :
+    $message = sprintf( '%s<a href="%s" class="your-class">%s</a>', __( 'Successfully added to cart.' , 'woocommerce' ), esc_url( get_permalink( woocommerce_get_page_id( 'cart' ) ) ), __( 'View Cart', 'woocommerce' ) );
+endif;
+return $message;
+}
+add_filter( 'wc_add_to_cart_message', 'your_add_to_cart_message' );
+
+
+//In reply to the ajax message update, try a translation function like:
+
+function your_woo_ajax_solution( $translation, $text, $domain ) {
+  if ( $domain == 'woocommerce' ) { // your domain name
+    if ( $text == 'View Cart' ) { // current text that shows
+        $translation = 'Basket updated.'; // The text that you would like to show
+    }
+  }
+
+  return $translation;
+}
+add_filter( 'gettext', 'your_woo_ajax_solution', 10, 3 );
+
+
+
+
+//2017 - 2019 - For Woocommerce 3+ (handling multiple products added to cart)
+//Replaced by wc_add_to_cart_message_html filter hook, the 2nd function argument has changed to $products (instead of $product_id)…
+//You can make changes on the code inside this hooked function, like in this thread:
+
+add_filter( 'wc_add_to_cart_message_html', 'custom_add_to_cart_message_html', 10, 2 );
+function custom_add_to_cart_message_html( $message, $products ) {
+    $titles = array();
+    $count  = 0;
+
+    foreach ( $products as $product_id => $qty ) {
+        $titles[] = ( $qty > 1 ? absint( $qty ) . ' &times; ' : '' ) . sprintf( _x( '&ldquo;%s&rdquo;', 'Item name in quotes', 'woocommerce' ), strip_tags( get_the_title( $product_id ) ) );
+        $count += $qty;
+    }
+
+    $titles     = array_filter( $titles );
+    $added_text = sprintf( _n( '%s has been added to your cart.', '%s have been added to your cart.', $count, 'woocommerce' ), wc_format_list_of_items( $titles ) );
+
+    // The custom message is just below
+    $added_text = sprintf( _n("%s item has %s", "%s items have %s", $count, "woocommerce" ),
+        $count, __("been added to your basket.", "woocommerce") );
+
+    // Output success messages
+    if ( 'yes' === get_option( 'woocommerce_cart_redirect_after_add' ) ) {
+        $return_to = apply_filters( 'woocommerce_continue_shopping_redirect', wc_get_raw_referer() ? wp_validate_redirect( wc_get_raw_referer(), false ) : wc_get_page_permalink( 'shop' ) );
+        $message   = sprintf( '<a href="%s" class="button wc-forward">%s</a> %s', esc_url( $return_to ), esc_html__( 'Continue shopping', 'woocommerce' ), esc_html( $added_text ) );
+    } else {
+        $message   = sprintf( '<a href="%s" class="button wc-forward">%s</a> %s', esc_url( wc_get_page_permalink( 'cart' ) ), esc_html__( 'View cart', 'woocommerce' ), esc_html( $added_text ) );
+    }
+    return $message;
+}
