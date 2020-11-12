@@ -1,0 +1,10 @@
+//Many of them are directly in the plugin files - unfortunately. Some messages are tied to filter hooks that allow you to edit them without messing with plugin files but that's not always the case.
+//The message you wanted to change was "Product Name was successfully added to your cart". This one is set in the function wc_add_to_cart_message in wc-cart-functions.php and this function allows you to change it using a filter:
+
+wc_add_notice( apply_filters( 'wc_add_to_cart_message', $message, $product_id ) );
+//So in your functions.php file you could add something like:
+
+add_filter('wc_add_to_cart_message', 'handler_function_name', 10, 2);
+function handler_function_name($message, $product_id) {
+    return "Thank you for adding product" . $product_id;
+}
