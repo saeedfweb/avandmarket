@@ -1,0 +1,25 @@
+//I'd like to add a link to my email subscription form at the top of my Cart page. I have the following cart related templates:
+
+//cart-empty.php
+//cart-item-data.php
+//cart-shipping.php
+//cart-totals.php
+//cart.php
+//If what I want is possible, do I add the necessary code in one of those, or in my functions.php?
+
+//Let me know if you want me to copy the code of any of those templates for the purposes of answering the question.
+//The following code will display a custom message with a linked text button in the top of cart page:
+
+
+
+add_action('woocommerce_before_cart', 'add_cart_custom_notice');
+function add_cart_custom_notice() {
+    // HERE the link to your content
+    $link = '#';
+
+    // For example, print a notice with a linked button (the text is editable and translatable)
+    wc_print_notice( sprintf( '<span class="subscription-reminder">' .
+        __('Pellentesque habitant morbi tristique senectus et netus et malesuada fames  %s', 'woocommerce') . '</span>',
+        '<a href='.$link.' class="button alt" style="float:right">'. __('Go to the subscription form', 'woocommerce') .'</a>'
+    ), 'notice' );
+}
